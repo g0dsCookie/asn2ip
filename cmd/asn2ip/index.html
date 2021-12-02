@@ -1,0 +1,61 @@
+<html>
+    <body>
+        <p>
+        This is a simple tool to pull all netblocks from an ASN into a text file output.<br/>
+        You can use this in your application (e.g. firewall like pfSense/OPNsense) to filter or prioritize
+        specific services.
+        </p>
+        <h2>How to use</h2>
+        <p>
+        To use this service just send a GET request with the ASN number as path.<br/>
+        You may also request multiple ASN by seperating them with a ':'.<br/>
+        <br/>
+        Examples:<br/>
+        Netflix <a href="https://asn.copr.icu/2906">https://asn.copr.icu/2906</a><br/>
+        Netflix and Twitch <a href="https://asn.copr.icu/2906:46489">https://asn.copr.icu/2906:46489</a>
+        </p>
+        <h2>Options</h2>
+        <p>
+        You can use the following options in your GET request to control the output of this tool.
+        </p>
+        <table>
+            <tr>
+                <th>Option</th>
+                <th>Type</th>
+                <th>Description</th>
+                <th>Default</th>
+            </tr>
+            <tr>
+                <td>ipv4</td>
+                <td>Boolean (y, yes, true)</td>
+                <td>Output IPv4 addresses.</td>
+                <td>true</td>
+            </tr>
+            <tr>
+                <td>ipv6</td>
+                <td>Boolean (y, yes, true)</td>
+                <td>Output IPv6 addresses.</td>
+                <td>true</td>
+            </tr>
+            <tr>
+                <td>separator</td>
+                <td>String</td>
+                <td>Use this as the separator between IP-Addresses</td>
+                <td>[[:space:]]</td>
+            </tr>
+            <tr>
+                <td>json</td>
+                <td>Boolean (y, yes, true)</td>
+                <td>Output as json instead of plain text</td>
+                <td>false</td>
+            </tr>
+        </table>
+        
+        <p>
+        Examples:<br/>
+        Netflix IPv4 only <a href="https://asn.copr.icu/2906?ipv4=true&ipv6=false">https://asn.copr.icu/2906?ipv4=true&ipv6=false</a><br/>
+        Twitch as JSON <a href="https://asn.copr.icu/46489?json=yes">https://asn.copr.icu/46489?json=yes</a><br/>
+        Twitch comma seperated <a href="https://asn.copr.icu/46489?seperator=%2C">https://asn.copr.icu/46489?seperator=%2C</a>
+        </p>
+    </body>
+</html>
