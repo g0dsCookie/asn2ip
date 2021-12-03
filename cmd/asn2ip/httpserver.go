@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,12 +43,12 @@ func newRouter(opts serverOptions) (*router, error) {
 
 	engine := gin.New()
 	router.Engine = engine
+	engine.SetHTMLTemplate(template.Must(template.New("index").Parse(index)))
 	engine.Use(requestLogger)
 	engine.Use(gin.Recovery())
 
 	engine.GET("/", func(c *gin.Context) {
-		c.Header("Content-Type", "text/html")
-		c.String(http.StatusOK, index)
+		c.HTML(http.StatusOK, "index", gin.H{})
 	})
 	engine.GET("/:asn", func(c *gin.Context) {
 		asn := strings.Split(c.Param("asn"), ":")
