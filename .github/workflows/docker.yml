@@ -35,6 +35,7 @@ jobs:
       - name: Setup docker metadata
         id: meta
         uses: docker/metadata-action@v3
+        if: ${{ github.event_name == 'release' }}
         with:
           images: ghcr.io/g0dscookie/asn2ip
           tags: |
@@ -43,6 +44,16 @@ jobs:
             type=semver,pattern={{version}},value=${{ env.ASN2IP_VERSION }}
             type=semver,pattern={{major}},value=${{ env.ASN2IP_VERSION }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.ASN2IP_VERSION }}
+            type=sha
+      - name: Setup docker metadata
+        id: meta
+        uses: docker/metadata-action@v3
+        if: ${{ github.event_name != 'release' }}
+        with:
+          images: ghcr.io/g0dscookie/asn2ip
+          tags: |
+            type=schedule
+            type=ref,event=branch
             type=sha
       - name: Setup QEMU for multiarch images
         uses: docker/setup-qemu-action@v1
