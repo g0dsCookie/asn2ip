@@ -7,6 +7,7 @@ import (
 
 	"github.com/g0dsCookie/asn2ip/internal/config"
 	"github.com/g0dsCookie/asn2ip/pkg/asn2ip"
+	"github.com/g0dsCookie/asn2ip/pkg/storage"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -33,7 +34,7 @@ func main() {
 				Name:    "run",
 				Aliases: []string{"daemon", "r", "d"},
 				Usage:   "run asn2ip as http daemon",
-				Flags:   config.CLIDaemonFlags,
+				Flags:   append(config.CLIDaemonFlags, config.CLIStorageFlags...),
 				Action:  runHandler,
 			},
 			{
@@ -76,11 +77,22 @@ func runHandler(c *cli.Context) error {
 	conf := setup(c)
 	daemon := config.NewDaemonConfig()
 	daemon.UpdateFromCLIContext(c)
+	stor := config.NewStorageConfig()
+	stor.UpdateFromCLIContext(c)
 
-	router := newRouter(serverOptions{
+	router, err := newRouter(serverOptions{
 		WhoisHost: conf.GetString("whois.host"),
 		WhoisPort: conf.GetInt("whois.port"),
+		Storage: storage.StorageOptions{
+			Name: stor.GetString("storage.name"),
+			TTL:  stor.GetDuration("storage.ttl"),
+		},
 	})
+
+	if err != nil {
+		logrus.WithFields(logrus.Fields{"error": err}).Panicln("failed to initialize http router")
+	}
+
 	router.Run(fmt.Sprintf("%s:%d", daemon.GetString("listen.address"), daemon.GetInt("listen.port")))
 	return nil
 }

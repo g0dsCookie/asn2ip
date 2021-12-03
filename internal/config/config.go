@@ -27,9 +27,11 @@ func newConfig(name string, vars map[string]configVar) *Config {
 
 func NewConfig() *Config { return newConfig("asn2ip", configVars) }
 
-func NewDaemonConfig() *Config { return newConfig("daemon", daemonVars) }
+func NewDaemonConfig() *Config { return newConfig("asn2ip", daemonVars) }
 
-func NewFetchConfig() *Config { return newConfig("fetch", fetchVars) }
+func NewFetchConfig() *Config { return newConfig("asn2ip", fetchVars) }
+
+func NewStorageConfig() *Config { return newConfig("asn2ip", storageVars) }
 
 func (conf *Config) UpdateFromCLIContext(c *cli.Context) {
 	for k, v := range conf.vars {

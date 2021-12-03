@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/g0dsCookie/asn2ip/pkg/asn2ip"
+	"github.com/g0dsCookie/asn2ip/pkg/storage"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -18,16 +20,22 @@ var index string
 type serverOptions struct {
 	WhoisHost string
 	WhoisPort int
+	Storage   storage.StorageOptions
 }
 
 type router struct {
-	fetcher *asn2ip.Fetcher
+	fetcher asn2ip.Fetcher
 	*gin.Engine
 }
 
-func newRouter(opts serverOptions) *router {
+func newRouter(opts serverOptions) (*router, error) {
+	stor, err := storage.NewStorage(opts.Storage)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to initialize storage")
+	}
+
 	router := &router{
-		fetcher: asn2ip.NewFetcher(opts.WhoisHost, opts.WhoisPort),
+		fetcher: asn2ip.NewCachedFetcher(opts.WhoisHost, opts.WhoisPort, stor),
 	}
 
 	gin.SetMode(gin.ReleaseMode)
@@ -93,7 +101,7 @@ func newRouter(opts serverOptions) *router {
 		}
 	})
 
-	return router
+	return router, nil
 }
 
 func wantJson(c *gin.Context) bool {

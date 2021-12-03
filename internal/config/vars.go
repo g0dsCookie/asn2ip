@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -14,9 +16,10 @@ type (
 )
 
 var (
-	CLIFlags       []cli.Flag
-	CLIDaemonFlags []cli.Flag
-	CLIFetchFlags  []cli.Flag
+	CLIFlags        []cli.Flag
+	CLIDaemonFlags  []cli.Flag
+	CLIFetchFlags   []cli.Flag
+	CLIStorageFlags []cli.Flag
 )
 
 var (
@@ -114,6 +117,25 @@ var fetchVars = map[string]configVar{
 	},
 }
 
+var storageVars = map[string]configVar{
+	"storage.name": {
+		Type:    stringType,
+		Default: "",
+		CLIFlag: &cli.StringFlag{
+			Name:  "storage-name",
+			Usage: "set storage backend to use",
+		},
+	},
+	"storage.ttl": {
+		Type:    durationType,
+		Default: 86400 * time.Second,
+		CLIFlag: &cli.DurationFlag{
+			Name:  "storage-ttl",
+			Usage: "set max ttl for cache",
+		},
+	},
+}
+
 func populateFlags(dest *[]cli.Flag, vars map[string]configVar) {
 	*dest = []cli.Flag{}
 	for _, c := range vars {
@@ -127,4 +149,5 @@ func init() {
 	populateFlags(&CLIFlags, configVars)
 	populateFlags(&CLIDaemonFlags, daemonVars)
 	populateFlags(&CLIFetchFlags, fetchVars)
+	populateFlags(&CLIStorageFlags, storageVars)
 }

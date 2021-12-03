@@ -6,19 +6,36 @@ import (
 	"net"
 	"strings"
 
+	"github.com/g0dsCookie/asn2ip/pkg/storage"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
-type Fetcher struct {
+type Fetcher interface {
+	Fetch(ipv4, ipv6 bool, asn ...string) (map[string]map[string][]*net.IPNet, error)
+}
+
+type fetcher struct {
 	host string
 	port int
 }
 
-func NewFetcher(host string, port int) *Fetcher {
-	return &Fetcher{
+type cachedFetcher struct {
+	cache storage.Storage
+	*fetcher
+}
+
+func NewFetcher(host string, port int) Fetcher {
+	return &fetcher{
 		host: host,
 		port: port,
+	}
+}
+
+func NewCachedFetcher(host string, port int, cache storage.Storage) Fetcher {
+	return &cachedFetcher{
+		cache:   cache,
+		fetcher: &fetcher{host: host, port: port},
 	}
 }
 
@@ -91,7 +108,7 @@ func fetch(conn net.Conn, as string, version int) ([]*net.IPNet, error) {
 	}
 }
 
-func (f *Fetcher) Fetch(ipv4, ipv6 bool, asn ...string) (map[string]map[string][]*net.IPNet, error) {
+func (f *fetcher) Fetch(ipv4, ipv6 bool, asn ...string) (map[string]map[string][]*net.IPNet, error) {
 	result := map[string]map[string][]*net.IPNet{}
 	if len(asn) == 0 {
 		return result, nil
@@ -131,6 +148,65 @@ func (f *Fetcher) Fetch(ipv4, ipv6 bool, asn ...string) (map[string]map[string][
 			}
 			result[v]["ipv6"] = net
 		}
+	}
+
+	return result, nil
+}
+
+func (f *cachedFetcher) Fetch(ipv4, ipv6 bool, asn ...string) (map[string]map[string][]*net.IPNet, error) {
+	result := map[string]map[string][]*net.IPNet{}
+	if len(asn) == 0 {
+		return result, nil
+	}
+
+	uncached := []string{}
+	for _, as := range asn {
+		r, err := f.cache.Get(as)
+		if err == storage.ErrASNotCached || (ipv4 && !r.FetchedIPv4) || (ipv6 && !r.FetchedIPv6) {
+			uncached = append(uncached, as)
+			continue
+		}
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to fetch asn %s from cache", as)
+		}
+
+		result[as] = map[string][]*net.IPNet{"ipv4": {}, "ipv6": {}}
+		if ipv4 {
+			cpy := make([]*net.IPNet, 0, len(r.IPv4))
+			copy(cpy, r.IPv4)
+			result[as]["ipv4"] = r.IPv4
+		}
+		if ipv6 {
+			cpy := make([]*net.IPNet, 0, len(r.IPv6))
+			copy(cpy, r.IPv6)
+			result[as]["ipv6"] = r.IPv6
+		}
+	}
+
+	if len(uncached) == 0 {
+		// all ASNs were cached
+		return result, nil
+	}
+
+	// request the rest
+	r, err := f.fetcher.Fetch(ipv4, ipv6, uncached...)
+	if err != nil {
+		return nil, err
+	}
+
+	// now cache them and append them the results
+	for as, v := range r {
+		err := f.cache.Set(storage.ASStorage{
+			AS:          as,
+			IPv4:        v["ipv4"],
+			IPv6:        v["ipv6"],
+			FetchedIPv4: ipv4,
+			FetchedIPv6: ipv6,
+		})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to put %s on cache", as)
+		}
+		result[as] = map[string][]*net.IPNet{"ipv4": v["ipv4"], "ipv6": v["ipv6"]}
 	}
 
 	return result, nil
