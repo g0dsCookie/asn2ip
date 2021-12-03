@@ -89,7 +89,7 @@ jobs:
           platforms: linux/amd64
           build-args: |
             VERSION=${{ env.ASN2IP_VERSION }}
-            REVISION=${{ env.GITHUB_SHA }}
+            REVISION=${{ github.sha }}
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.metabranch.outputs.tags }}
           labels: ${{ steps.metabranch.outputs.labels }}
