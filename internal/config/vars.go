@@ -78,6 +78,15 @@ var configVars = map[string]configVar{
 }
 
 var daemonVars = map[string]configVar{
+	"listen.url": {
+		Type:    stringType,
+		Default: "http://localhost:8080",
+		CLIFlag: &cli.StringFlag{
+			Name:    "url",
+			Usage:   "set app url",
+			EnvVars: []string{"LISTEN_URL"},
+		},
+	},
 	"listen.address": {
 		Type:    stringType,
 		Default: "0.0.0.0",

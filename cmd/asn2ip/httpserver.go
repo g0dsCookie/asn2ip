@@ -21,6 +21,7 @@ var index string
 type serverOptions struct {
 	WhoisHost string
 	WhoisPort int
+	Url       string
 	Storage   storage.StorageOptions
 }
 
@@ -48,7 +49,7 @@ func newRouter(opts serverOptions) (*router, error) {
 	engine.Use(gin.Recovery())
 
 	engine.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index", gin.H{})
+		c.HTML(http.StatusOK, "index", gin.H{"BASE_URL": opts.Url})
 	})
 	engine.GET("/:asn", func(c *gin.Context) {
 		asn := strings.Split(c.Param("asn"), ":")

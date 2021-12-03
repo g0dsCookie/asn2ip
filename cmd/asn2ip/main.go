@@ -83,6 +83,7 @@ func runHandler(c *cli.Context) error {
 	router, err := newRouter(serverOptions{
 		WhoisHost: conf.GetString("whois.host"),
 		WhoisPort: conf.GetInt("whois.port"),
+		Url:       daemon.GetString("listen.url"),
 		Storage: storage.StorageOptions{
 			Name: stor.GetString("storage.name"),
 			TTL:  stor.GetDuration("storage.ttl"),
